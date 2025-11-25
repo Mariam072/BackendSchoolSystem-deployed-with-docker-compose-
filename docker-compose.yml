@@ -1,0 +1,45 @@
+﻿version: '3.9'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: db
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "P@ssw0rd123!"
+      MSSQL_DATABASE: "SchoolManagementDB"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    restart: always
+    networks:
+      - backend_network
+
+  api:
+    build: .
+    container_name: backend-api
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://*:8080"  
+      DB_HOST: "db"
+      DB_NAME: "SchoolManagementDB" 
+      DB_PASSWORD: "P@ssw0rd123!"
+    # 🔥 الحل: ربط مجلد الـ Host مع الـ Container
+    volumes:
+      - ./Migrations:/app/Migrations
+    depends_on:
+      - db
+    networks:
+      - backend_network
+    restart: on-failure
+
+volumes:
+  sql_data:
+
+networks:
+  backend_network:
+    driver: bridge
